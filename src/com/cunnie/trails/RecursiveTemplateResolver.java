@@ -15,12 +15,12 @@ import java.util.Collection;
 public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
     private Path sourcePath;
     private Path destinationPath;
-    private Collection<String> tablenames;
+    private Collection<Table> tables;
 
-    public RecursiveTemplateResolver(Path sourcePath, Path destinationPath, Collection<String> tablenames) {
+    public RecursiveTemplateResolver(Path sourcePath, Path destinationPath, Collection<Table> tables) {
         this.sourcePath = sourcePath;
         this.destinationPath = destinationPath;
-        this.tablenames = tablenames;
+        this.tables = tables;
     }
 
     /**
@@ -65,15 +65,15 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
             Path relativeParent = sourcePath.relativize(parent);
             Path newDir = destinationPath.resolve(relativeParent);
             if (filename.contains("TABLE")) {
-                for (String tablename: tablenames) {
-                    String classname = pascalCaseFromSnakeCase(tablename);
+                for (Table table: tables) {
+                    String classname = pascalCaseFromSnakeCase(table.getClassName());
                     String camelcasename = camelCaseFromPascalCase(classname);
                     String templatizedContents = contents
                             .replace("%%%TABLE_CLASS%%%", classname)
                             .replace("%%%TABLE_CAMEL_CASE%%%", camelcasename);
                     destinationFilename = filename
                             .replace("TABLECLASS", classname)
-                            .replace("TABLENAME", tablename);
+                            .replace("TABLENAME", table.getDbName());
                     System.out.println("destinationFilename: " + destinationFilename);
                     Path newFile = newDir.resolve(destinationFilename);
                     Files.write(newFile, templatizedContents.getBytes());

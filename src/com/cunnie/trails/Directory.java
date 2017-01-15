@@ -21,8 +21,8 @@ public class Directory {
         this.source = source;
     }
 
-    public void resolveTo(Path destination, Collection<String> tablenames) throws IOException {
-        RecursiveTemplateResolver resolver = new RecursiveTemplateResolver(source, destination, tablenames);
+    public void resolveTo(Path destination, Collection<Table> tables) throws IOException {
+        RecursiveTemplateResolver resolver = new RecursiveTemplateResolver(source, destination, tables);
         Files.walkFileTree(source, resolver);
     }
 }

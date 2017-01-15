@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+import com.cunnie.trails.Field;
 import org.apache.commons.cli.*;
 
 

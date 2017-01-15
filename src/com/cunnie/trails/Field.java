@@ -1,4 +1,4 @@
-package com.cunnie;
+package com.cunnie.trails;
 
 import java.util.*;
 
@@ -43,6 +43,9 @@ public class Field {
     private String javaName;
     private String javaType;
     private String englishName;
+    private Integer characterMaximumLength = null;
+    private Integer numericPrecision = null;
+    private Integer numericScale = null;
 
     // datatype lookup
     private static final Map<String, String> javaTypes;
@@ -58,22 +61,40 @@ public class Field {
         javaTypes = Collections.unmodifiableMap(map);
     }
 
+    /// TODO: Update tests to not use this constructor.  And then remove this constructor.
     public Field(String dbName, String dbType) {
         this.dbName = dbName;
         this.dbType = dbType;
         this.javaName = dbName;
 
+        initializeField();
+    }
+
+    public Field(String dbName, String dbType, int characterMaximumLength, int numericPrecision, int numericScale) {
+        this.dbName = dbName;
+        this.dbType = dbType;
+        this.javaName = dbName;
+        this.characterMaximumLength = characterMaximumLength;
+        this.numericPrecision = numericPrecision;
+        this.numericScale = numericScale;
+
+        initializeField();
+    }
+
+    private void initializeField() {
         // Replace _ and capitalize first letter of each word to Englishize
         // e.g.  first_name  -->  First Name
         String[] names = dbName.split("_");
-        ArrayList<String> englishnames = new ArrayList<>();
+        ArrayList<String> propercaseNames = new ArrayList<>();
         for (String name: names) {
             char[] namechars = name.toCharArray();
             namechars[0] = Character.toUpperCase(namechars[0]);
-            englishnames.add(String.valueOf(namechars));
+            propercaseNames.add(String.valueOf(namechars));
         }
-        englishName = String.join(" ", englishnames);
+        englishName = String.join(" ", propercaseNames);
 
+        propercaseNames.set(0, names[0]);
+        javaName = String.join("", propercaseNames);
         javaType = javaTypes.get(dbType);
     }
 

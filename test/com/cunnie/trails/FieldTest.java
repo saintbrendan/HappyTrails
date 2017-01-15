@@ -1,5 +1,6 @@
-package com.cunnie;
+package com.cunnie.trails;
 
+import com.cunnie.trails.Field;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

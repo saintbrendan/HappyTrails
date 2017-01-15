@@ -45,10 +45,12 @@ public class DirectoryTest {
             "import com.netarks.springframework.services.%%%TABLE_CLASS%%%Service;\n" +
             "import com.netarks.springframework.domain.%%%TABLE_CLASS%%%;";
 
-    final String SUBDIR = "newpath/subdir";
+    final String SUBDIR = "newpath";
 
-    final ArrayList<String> NULL_TABLENAME = new ArrayList<>(0);
-    final List<String> TABLENAMES = Arrays.asList("user", "vehicle");
+    final ArrayList<Table> NULL_TABLES = new ArrayList<>(0);
+    final List<Table> TABLES = Arrays.asList( new Table("user", new ArrayList<Field>()),
+            new Table("vehicle", new ArrayList<Field>()),
+            new Table("some_table", new ArrayList<Field>()));
     Path sourcePath;
     Path destinationPath;
     Path newpath;
@@ -67,7 +69,7 @@ public class DirectoryTest {
     @Test
     public void resolveToCopiesDirectory() throws IOException {
         Directory dir = new Directory (sourcePath);
-        dir.resolveTo(destinationPath, NULL_TABLENAME);
+        dir.resolveTo(destinationPath, NULL_TABLES);
 
         DirectoryComparer visitor = new DirectoryComparer(sourcePath, destinationPath);
         Files.walkFileTree(sourcePath, visitor);
@@ -81,7 +83,7 @@ public class DirectoryTest {
         writeWholeFileToPath(newpath);
 
         Directory dir = new Directory (sourcePath);
-        dir.resolveTo(destinationPath, NULL_TABLENAME);
+        dir.resolveTo(destinationPath, NULL_TABLES);
 
         Path expectedDir = destinationPath.resolve(SUBDIR);
         Path expectedFile = expectedDir.resolve("test.txt");
@@ -97,7 +99,7 @@ public class DirectoryTest {
         writeWholeTemplatizedFileToPath();
 
         Directory dir = new Directory (sourcePath);
-        dir.resolveTo(destinationPath, TABLENAMES);
+        dir.resolveTo(destinationPath, TABLES);
 
         Path expectedDir = destinationPath.resolve(SUBDIR);
         Path expectedFile = expectedDir.resolve("UserService.java");
@@ -113,7 +115,7 @@ public class DirectoryTest {
         writeUserHtmlContentsFileToPath();
 
         Directory dir = new Directory (sourcePath);
-        dir.resolveTo(destinationPath, TABLENAMES);
+        dir.resolveTo(destinationPath, TABLES);
 
         String expected_content = USER_HTML_CONTENTS.replace("%%%TABLE_CLASS%%%", "User");
         Path expectedDir = destinationPath.resolve(SUBDIR);
@@ -130,7 +132,7 @@ public class DirectoryTest {
         writeUserControllerContentsFileToPath();
 
         Directory dir = new Directory (sourcePath);
-        dir.resolveTo(destinationPath, TABLENAMES);
+        dir.resolveTo(destinationPath, TABLES);
 
         String expected_content = USER_CONTROLLER_PREFIX_CONTENTS.replace("%%%TABLE_CLASS%%%", "User");
         Path expectedDir = destinationPath.resolve(SUBDIR);

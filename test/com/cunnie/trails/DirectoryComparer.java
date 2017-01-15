@@ -12,7 +12,7 @@ import java.util.ArrayList;
  * A class to compare two directories.
  * Not thread safe.
  */
-public class DirectoryComparer extends SimpleFileVisitor<Path> {
+class DirectoryComparer extends SimpleFileVisitor<Path> {
     private Path expected;
     private Path generated;
     private boolean match = true;
