@@ -81,8 +81,19 @@ public class FieldTest {
 
     @Test
     public void testMultiWordEnglishName() throws Exception {
-        Field field = new Field("first_name", "int");
+        Field field = new Field("first_name", "varchar");
         assertEquals("First Name", field.getEnglishName());
+    }
+
+    @Test
+    public void testResolveResolvesAllWildcards() throws Exception {
+        Field field = new Field("first_name", "varchar");
+        String resolvedText = field.resolve("%%%FIELD_NAME%%% " +
+                "%%%FIELD_DB_TYPE%%% " +
+                "%%%FIELD_JAVA_NAME%%% " +
+                "%%%FIELD_JAVA_TYPE%%% " +
+                "%%%FIELD_ENGLISH_NAME%%%");
+        assertEquals("first_name varchar firstName String First Name", resolvedText);
     }
 
 }

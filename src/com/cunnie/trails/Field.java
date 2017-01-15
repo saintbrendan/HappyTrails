@@ -118,6 +118,7 @@ public class Field {
         return englishName;
     }
 
+    /// TODO:  delete all this
     public String toFormHtml() {
         if (NON_EDITABLE_FIELDS.contains(getDbName())){
             return "            <!-- " + getDbName() + " is not directly editable by the UI -->\n";
@@ -135,4 +136,13 @@ public class Field {
                 return String.format(USER_TEXT_FORM, getEnglishName(), getDbName());
         }
     }
+
+    public String resolve(String sourceFileContents) {
+        return sourceFileContents.replace("%%%FIELD_NAME%%%", this.getDbName())
+                .replace("%%%FIELD_DB_TYPE%%%", this.getDbType())
+                .replace("%%%FIELD_JAVA_NAME%%%", this.getJavaName())
+                .replace("%%%FIELD_JAVA_TYPE%%%", this.getJavaType())
+                .replace("%%%FIELD_ENGLISH_NAME%%%", this.getEnglishName());
+    }
+
 }
