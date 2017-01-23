@@ -1,11 +1,19 @@
 package com.cunnie;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 
+import com.cunnie.trails.Directory;
 import com.cunnie.trails.Field;
+import com.cunnie.trails.Table;
+import com.cunnie.trails.TablesFactory;
+import javafx.scene.control.Tab;
 import org.apache.commons.cli.*;
 
 
@@ -34,22 +42,34 @@ public class Main {
             "                    <input type=\"text\" class=\"form-control\" th:field=\"*{%%%DBNAME%%%}\"/>\n"+
             "                </div>\n"+
             "            </div>\n";
-    public static void main(String[] args) throws SQLException, ClassNotFoundException, ParseException {
+    public static void main(String[] args) throws SQLException, ClassNotFoundException, ParseException, IOException {
         // get options
         Options options = new Options();
         Option sourceOpt = new Option("s", "source", true, "Source of .PREFIX and .SUFFIX and .PER_FIELD files");
         Option destOpt = new Option("d", "dest", true, "destination of generated files");
+        Option schemaOpt = new Option("c", "schema", true, "database schema to interrogate");
         options.addOption(sourceOpt);
         options.addOption(destOpt);
+        options.addOption(schemaOpt);
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
         String source = cmd.getOptionValue("source");
         String dest = cmd.getOptionValue("dest");
+        String schema = cmd.getOptionValue("schema");
 
         System.out.println("source: " + source);
         System.out.println("dest: " + dest);
+        System.out.println("schema: " + schema);
 
+        Class.forName("com.mysql.jdbc.Driver");
+        Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/" + schema, "root", "root");
+        Collection<Table> tables = new TablesFactory(conn).getTables();
+        Path sourcePath = Paths.get(source);
+        Path destPath = Paths.get(dest);
+        Directory sourceDir = new Directory(sourcePath);
+        sourceDir.resolveTo(destPath, tables);
 
     }
 

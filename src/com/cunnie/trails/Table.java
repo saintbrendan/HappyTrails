@@ -47,6 +47,9 @@ public class Table {
     }
 
     public String resolve(String sourceFileText) {
-        return null;
+        return sourceFileText
+                .replace("%%%TABLE_NAME%%%", this.getDbName())
+                .replace("%%%TABLE_CLASS%%%", this.getClassName())
+                .replace("%%%TABLE_CAMEL_CASE%%%", this.getCamelClassName());
     }
 }

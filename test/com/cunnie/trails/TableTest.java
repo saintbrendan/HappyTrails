@@ -37,7 +37,11 @@ public class TableTest {
 
     @Test
     public void resolve() throws Exception {
-
+        Table table = new Table("name_of_table", new ArrayList<>());
+        String resolvedText = table.resolve("%%%TABLE_NAME%%% " +
+                "%%%TABLE_CLASS%%% " +
+                "%%%TABLE_CAMEL_CASE%%%");
+        assertEquals("name_of_table NameOfTable nameOfTable", resolvedText);
     }
 
 }

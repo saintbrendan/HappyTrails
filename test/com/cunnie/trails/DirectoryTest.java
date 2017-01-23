@@ -44,22 +44,28 @@ public class DirectoryTest {
             "\n" +
             "import com.netarks.springframework.services.%%%TABLE_CLASS%%%Service;\n" +
             "import com.netarks.springframework.domain.%%%TABLE_CLASS%%%;";
+    final String PREFIX_FILE_CONTENTS = "PREFIX file.  ";
+    final String PER_FIELD1_FILE_CONTENTS = "PER_FIELD1 file.  ";
+    final String PER_FIELD2_FILE_CONTENTS = "PER_FIELD2 file.  ";
+    final String SUFFIX_FILE_CONTENTS = "SUFFIX file.  ";
 
-    final String SUBDIR = "newpath";
+    final String SUBDIR = "newpath/subdir";
 
-    final ArrayList<Table> NULL_TABLES = new ArrayList<>(0);
-    final List<Table> TABLES = Arrays.asList( new Table("user", new ArrayList<Field>()),
-            new Table("vehicle", new ArrayList<Field>()),
-            new Table("some_table", new ArrayList<Field>()));
+    List<Field> FIELDS = Arrays.asList(new Field("id", "int"), new Field("version", "int"));
+    final List<Table> TABLES = Arrays.asList( new Table("user", FIELDS),
+            new Table("vehicle", FIELDS),
+            new Table("some_table", FIELDS));
     Path sourcePath;
     Path destinationPath;
     Path newpath;
+    Directory dir;
 
     @Before
     public void setUp() throws Exception {
         sourcePath = Files.createTempDirectory("source");
         destinationPath = Files.createTempDirectory("destination");
         newpath = Files.createDirectories(sourcePath.resolve(SUBDIR));
+        dir = new Directory (sourcePath);
     }
 
     @After
@@ -68,8 +74,7 @@ public class DirectoryTest {
 
     @Test
     public void resolveToCopiesDirectory() throws IOException {
-        Directory dir = new Directory (sourcePath);
-        dir.resolveTo(destinationPath, NULL_TABLES);
+        dir.resolveTo(destinationPath, TABLES);
 
         DirectoryComparer visitor = new DirectoryComparer(sourcePath, destinationPath);
         Files.walkFileTree(sourcePath, visitor);
@@ -80,10 +85,9 @@ public class DirectoryTest {
 
     @Test
     public void resolveToCopiesWholeFiles() throws IOException {
-        writeWholeFileToPath(newpath);
+        writeWholeFile(newpath, "test.txt", WHOLE_CONTENTS);
 
-        Directory dir = new Directory (sourcePath);
-        dir.resolveTo(destinationPath, NULL_TABLES);
+        dir.resolveTo(destinationPath, TABLES);
 
         Path expectedDir = destinationPath.resolve(SUBDIR);
         Path expectedFile = expectedDir.resolve("test.txt");
@@ -96,9 +100,8 @@ public class DirectoryTest {
 
     @Test
     public void resolveToCopiesWholeTemplatizedFiles() throws IOException {
-        writeWholeTemplatizedFileToPath();
+        writeWholeFile(newpath, "TABLECLASSService.java", WHOLE_TEMPLATIZED_CONTENTS);
 
-        Directory dir = new Directory (sourcePath);
         dir.resolveTo(destinationPath, TABLES);
 
         Path expectedDir = destinationPath.resolve(SUBDIR);
@@ -112,60 +115,57 @@ public class DirectoryTest {
 
     @Test
     public void resolveToCopiesTemplatizedFileWithTableClassNameInFile() throws IOException {
-        writeUserHtmlContentsFileToPath();
+        writeWholeFile(newpath, "TABLENAMEs.html", USER_HTML_CONTENTS);
 
-        Directory dir = new Directory (sourcePath);
         dir.resolveTo(destinationPath, TABLES);
 
-        String expected_content = USER_HTML_CONTENTS.replace("%%%TABLE_CLASS%%%", "User");
+        String expectedContent = USER_HTML_CONTENTS.replace("%%%TABLE_CLASS%%%", "User");
         Path expectedDir = destinationPath.resolve(SUBDIR);
         Path expectedFile = expectedDir.resolve("users.html");
         assertTrue("File ["+expectedFile+"] should exist.  But it doesn't.", Files.exists(expectedFile));
         String content = new String(Files.readAllBytes(expectedFile));
 
         assertEquals("File "+expectedFile + " should have contents "+ WHOLE_USER_CONTENTS +
-                " but it has contents " + content, expected_content, content);
+                " but it has contents " + content, expectedContent, content);
     }
 
     @Test
     public void resolveToCopiesTemplatizedControllerPrefixFileWithTableClassNameInFile() throws IOException {
-        writeUserControllerContentsFileToPath();
+        writeWholeFile(newpath, "TABLECLASSController.java", USER_CONTROLLER_PREFIX_CONTENTS);
 
-        Directory dir = new Directory (sourcePath);
         dir.resolveTo(destinationPath, TABLES);
 
-        String expected_content = USER_CONTROLLER_PREFIX_CONTENTS.replace("%%%TABLE_CLASS%%%", "User");
+        String expectedContent = USER_CONTROLLER_PREFIX_CONTENTS.replace("%%%TABLE_CLASS%%%", "User");
         Path expectedDir = destinationPath.resolve(SUBDIR);
-        Path expectedFile = expectedDir.resolve("UserController.java.PREFIX");
+        Path expectedFile = expectedDir.resolve("UserController.java");
         assertTrue("File ["+expectedFile+"] should exist.  But it doesn't.", Files.exists(expectedFile));
         String content = new String(Files.readAllBytes(expectedFile));
 
         assertEquals("File "+expectedFile + " should have contents: \n"+ WHOLE_USER_CONTENTS +
-                " but it has contents: \n" + content, expected_content, content);
+                " but it has contents: \n" + content, expectedContent, content);
     }
 
-    /**
-     * Write a whole file to directory newpath
-     * @param newpath  the directory to write the WHOLE file to.
-     */
-    private void writeWholeFileToPath(Path newpath) throws IOException {
-        Path filepath = newpath.resolve("test.txt");
-        Files.write(filepath, WHOLE_CONTENTS.getBytes());
+    @Test
+    public void resolveAggregatesSuffixPerField1PerField2SuffixFilesToOneDestinationFile() throws Exception {
+        writeWholeFile(newpath, "TABLECLASS.java.PREFIX", PREFIX_FILE_CONTENTS);
+        writeWholeFile(newpath, "TABLECLASS.java.PER_FIELD1", PER_FIELD1_FILE_CONTENTS);
+        writeWholeFile(newpath, "TABLECLASS.java.PER_FIELD2", PER_FIELD2_FILE_CONTENTS);
+        writeWholeFile(newpath, "TABLECLASS.java.SUFFIX", SUFFIX_FILE_CONTENTS);
+
+        dir.resolveTo(destinationPath, TABLES);
+        Path expectedDir = destinationPath.resolve(SUBDIR);
+        Path expectedFile = expectedDir.resolve("Vehicle.java");
+        assertTrue("File ["+expectedFile+"] should exist.  But it doesn't.", Files.exists(expectedFile));
+
+        String content = new String(Files.readAllBytes(expectedFile));
+        String expectedContent = PREFIX_FILE_CONTENTS + PER_FIELD1_FILE_CONTENTS + PER_FIELD1_FILE_CONTENTS + PER_FIELD2_FILE_CONTENTS + PER_FIELD2_FILE_CONTENTS + SUFFIX_FILE_CONTENTS;
+        assertEquals("File "+expectedFile + " should have contents: \n"+ expectedContent +
+                " but it has contents: \n" + content, expectedContent, content);
     }
 
-    private void writeWholeTemplatizedFileToPath() throws IOException {
-        Path filepath = newpath.resolve("TABLECLASSService.java");
-        Files.write(filepath, WHOLE_TEMPLATIZED_CONTENTS.getBytes());
-    }
-
-    private void writeUserHtmlContentsFileToPath() throws IOException {
-        Path filepath = newpath.resolve("TABLENAMEs.html");
-        Files.write(filepath, USER_HTML_CONTENTS.getBytes());
-    }
-
-    private void writeUserControllerContentsFileToPath() throws IOException {
-        Path filepath = newpath.resolve("TABLECLASSController.java.PREFIX");
-        Files.write(filepath, USER_CONTROLLER_PREFIX_CONTENTS.getBytes());
+    private void writeWholeFile(Path path, String filename, String contents) throws IOException {
+        Path filepath = path.resolve(filename);
+        Files.write(filepath, contents.getBytes());
     }
 
 }

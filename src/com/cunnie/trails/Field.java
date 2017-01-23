@@ -1,5 +1,6 @@
 package com.cunnie.trails;
 
+import java.security.InvalidParameterException;
 import java.util.*;
 
 public class Field {
@@ -42,10 +43,12 @@ public class Field {
     private String dbType;
     private String javaName;
     private String javaType;
+    private String propercaseName;
     private String englishName;
     private Integer characterMaximumLength = null;
     private Integer numericPrecision = null;
     private Integer numericScale = null;
+    private String predomain = ""; // Used in the domains/class.java files for id and version fields.
 
     // datatype lookup
     private static final Map<String, String> javaTypes;
@@ -54,6 +57,9 @@ public class Field {
         map.put("int", "int");
         map.put("varchar", "String");
         map.put("bit", "boolean");
+        map.put("binary", "byte[]");
+        map.put("blob", "byte[]");
+        map.put("longblob", "byte[]");
         map.put("date", "java.sql.Date");
         map.put("decimal", "java.math.BigDecimal");
         map.put("numeric", "java.math.BigDecimal");
@@ -92,10 +98,22 @@ public class Field {
             propercaseNames.add(String.valueOf(namechars));
         }
         englishName = String.join(" ", propercaseNames);
+        propercaseName = String.join("", propercaseNames);
 
         propercaseNames.set(0, names[0]);
         javaName = String.join("", propercaseNames);
-        javaType = javaTypes.get(dbType);
+        javaType = javaTypes.get(dbType.toLowerCase());
+        if (javaType == null) {
+            /// TODO: log but don't throw exception here
+            throw new InvalidParameterException(dbName + "'s dbType " + dbType + " does not have a matching java type!");
+        }
+
+        if ("id".equals(dbName)) {
+            predomain = "    @Id\n" +
+                    "    @GeneratedValue(strategy = GenerationType.AUTO)";
+        } else if ("version".equals(dbName)) {
+            predomain = "    @Version";
+        }
     }
 
     public String getDbName() {
@@ -116,6 +134,14 @@ public class Field {
 
     public String getEnglishName() {
         return englishName;
+    }
+
+    public String getPropercaseName() {
+        return propercaseName;
+    }
+
+    public String getPredomain() {
+        return predomain;
     }
 
     /// TODO:  delete all this
