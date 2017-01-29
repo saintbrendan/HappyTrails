@@ -1,5 +1,6 @@
 package com.cunnie.trails;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -12,9 +13,11 @@ import java.util.*;
  * Created by saint on 11/27/2016.
  */
 public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
+    private static final String PROJECT_JAVA_DIR = "src/main/java/";  // Assuming Java Spring default directories
     private Path sourcePath;
     private Path destinationPath;
     private Collection<Table> tables;
+    private String javaPackage;
     HashMap<Path, HashMap<String, String[]>> filesFromPath = new HashMap<>();
 
     public RecursiveTemplateResolver(Path sourcePath, Path destinationPath, Collection<Table> tables) {
@@ -26,9 +29,10 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
     /**
      * <code>FileVisitor</code> method.
      * Make create the destination directory if it doesn't already exist.
-     * @param dir
+     * Get the java package string.
+     * @param dir  The current directory being resolved.
      * @param attrs
-     * @return
+     * @return super.preVisitDirectory(dir, attrs)
      * @throws IOException
      */
     @Override
@@ -42,7 +46,24 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
         }
         filesFromPath.put(relativePath, new HashMap<>());
 
+        javaPackage = getJavaPackage(sourcePath, PROJECT_JAVA_DIR, dir);
+
         return supersResult;
+    }
+
+    /**
+     * Get the java package name (e.g. "com.storm.trident") from its path.
+     * @param sourcePath  The project's absolute root directory.
+     * @param projectJavaDir  The relative root java directory.  Usually PROJECT_DIR/src/main/java/.
+     * @param dir  The directory we're resolving now.  E.g. PROJECT_DIR/src/main/java/com/storm/trident./
+     * @return  The string of the java package.  E.g. "com.storm.trident".
+     * @throws IOException
+     */
+    private String getJavaPackage(Path sourcePath, String projectJavaDir, Path dir) throws IOException {
+        Path javaDir = sourcePath.resolve(projectJavaDir);  // What is the root java dir?
+        Path javaPackagePath = javaDir.relativize(dir);  // What directory are we in relative to the root java dir?
+        String javaPackage = javaPackagePath.toString().replace(File.separator, ".");
+        return javaPackage;
     }
 
     @Override
@@ -83,11 +104,13 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
         System.out.println("file: " + file);
         System.out.println("dir: " + dir);
         System.out.println("relativePath: " + relativePath);
+
         HashMap<String, String[]> fileContentsByName = filesFromPath.get(relativePath);
         String destinationTableFilename = filename;
         Path parent = file.getParent();
         Path relativeParent = sourcePath.relativize(parent);
         Path newDir = destinationPath.resolve(relativeParent);
+        contents = contents.replace("%%%PACKAGE%%%", this.javaPackage);
         if (filename.contains("TABLE")) {
             for (Table table: tables) {
                 String tableTemplatizedContents = contents
@@ -115,6 +138,7 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
                             String fieldTemplatizedContents = tableTemplatizedContents.replace("%%%FIELD_NAME%%%", field.getDbName())
                                     .replace("%%%FIELD_DB_TYPE%%%", field.getDbType())
                                     .replace("%%%FIELD_JAVA_NAME%%%", field.getJavaName())
+                                    .replace("%%%FIELD_JAVA_PASCAL_CASE%%%", field.getPascalCase())
                                     .replace("%%%FIELD_ENGLISH_NAME%%%", field.getEnglishName())
                                     .replace("%%%FIELD_PRE_DOMAIN%%%", field.getPredomain())
                                     .replace("%%%FIELD_JAVA_TYPE%%%", field.getJavaType())
@@ -146,7 +170,7 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
     }
 
     private String pascalCaseFromSnakeCase(String tablename) {
-        // Replace _ and capitalize first letter of each word to Englishize
+        // Remove _ and capitalize first letter of each word to PascalCase-ize
         // e.g.  first_name  -->  First Name
         String[] names = tablename.split("_");
         ArrayList<String> englishnames = new ArrayList<>();

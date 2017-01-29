@@ -43,7 +43,7 @@ public class Field {
     private String dbType;
     private String javaName;
     private String javaType;
-    private String propercaseName;
+    private String pascalCase;
     private String englishName;
     private Integer characterMaximumLength = null;
     private Integer numericPrecision = null;
@@ -98,7 +98,7 @@ public class Field {
             propercaseNames.add(String.valueOf(namechars));
         }
         englishName = String.join(" ", propercaseNames);
-        propercaseName = String.join("", propercaseNames);
+        pascalCase = String.join("", propercaseNames);
 
         propercaseNames.set(0, names[0]);
         javaName = String.join("", propercaseNames);
@@ -109,10 +109,10 @@ public class Field {
         }
 
         if ("id".equals(dbName)) {
-            predomain = "    @Id\n" +
+            predomain = "@Id\n" +
                     "    @GeneratedValue(strategy = GenerationType.AUTO)";
         } else if ("version".equals(dbName)) {
-            predomain = "    @Version";
+            predomain = "@Version";
         }
     }
 
@@ -136,8 +136,8 @@ public class Field {
         return englishName;
     }
 
-    public String getPropercaseName() {
-        return propercaseName;
+    public String getPascalCase() {
+        return pascalCase;
     }
 
     public String getPredomain() {
@@ -168,6 +168,7 @@ public class Field {
                 .replace("%%%FIELD_DB_TYPE%%%", this.getDbType())
                 .replace("%%%FIELD_JAVA_NAME%%%", this.getJavaName())
                 .replace("%%%FIELD_JAVA_TYPE%%%", this.getJavaType())
+                .replace("%%%FIELD_JAVA_PASCAL_CASE%%%", this.getPascalCase())
                 .replace("%%%FIELD_ENGLISH_NAME%%%", this.getEnglishName());
     }
 

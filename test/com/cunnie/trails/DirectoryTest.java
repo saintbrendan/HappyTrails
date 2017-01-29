@@ -4,10 +4,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -44,12 +45,18 @@ public class DirectoryTest {
             "\n" +
             "import com.netarks.springframework.services.%%%TABLE_CLASS%%%Service;\n" +
             "import com.netarks.springframework.domain.%%%TABLE_CLASS%%%;";
+    final String USER_CONTROLLER_PREFIX_W_PACKAGE_CONTENTS = "package %%%PACKAGE%%%.controllers;\n" +
+            "\n" +
+            "import com.netarks.springframework.services.%%%TABLE_CLASS%%%Service;\n" +
+            "import com.netarks.springframework.domain.%%%TABLE_CLASS%%%;";
     final String PREFIX_FILE_CONTENTS = "PREFIX file.  ";
     final String PER_FIELD1_FILE_CONTENTS = "PER_FIELD1 file.  ";
     final String PER_FIELD2_FILE_CONTENTS = "PER_FIELD2 file.  ";
     final String SUFFIX_FILE_CONTENTS = "SUFFIX file.  ";
 
-    final String SUBDIR = "newpath/subdir";
+    final String PROJECT_JAVA_DIR = "src/main/java/";
+    final String JAVA_PACKAGE = "com.testdomain.testproject";
+    final String SUBDIR = PROJECT_JAVA_DIR + JAVA_PACKAGE.replace(".", "/");
 
     List<Field> FIELDS = Arrays.asList(new Field("id", "int"), new Field("version", "int"));
     final List<Table> TABLES = Arrays.asList( new Table("user", FIELDS),
@@ -146,7 +153,7 @@ public class DirectoryTest {
     }
 
     @Test
-    public void resolveAggregatesSuffixPerField1PerField2SuffixFilesToOneDestinationFile() throws Exception {
+    public void resolveToAggregatesSuffixPerField1PerField2SuffixFilesToOneDestinationFile() throws Exception {
         writeWholeFile(newpath, "TABLECLASS.java.PREFIX", PREFIX_FILE_CONTENTS);
         writeWholeFile(newpath, "TABLECLASS.java.PER_FIELD1", PER_FIELD1_FILE_CONTENTS);
         writeWholeFile(newpath, "TABLECLASS.java.PER_FIELD2", PER_FIELD2_FILE_CONTENTS);
@@ -166,6 +173,26 @@ public class DirectoryTest {
     private void writeWholeFile(Path path, String filename, String contents) throws IOException {
         Path filepath = path.resolve(filename);
         Files.write(filepath, contents.getBytes());
+    }
+
+    @Test
+    public void resolveToResolvesPackageName() throws IOException {
+        writeWholeFile(newpath, "TABLECLASSController.java", USER_CONTROLLER_PREFIX_W_PACKAGE_CONTENTS);
+
+        dir.resolveTo(destinationPath, TABLES);
+
+        String expectedContent = USER_CONTROLLER_PREFIX_W_PACKAGE_CONTENTS
+                .replace("%%%PACKAGE%%%", JAVA_PACKAGE)
+                .replace("%%%TABLE_CLASS%%%", "User");
+        Path expectedDir = destinationPath.resolve(SUBDIR);
+        Path expectedFile = expectedDir.resolve("UserController.java");
+        assertTrue("File ["+expectedFile+"] should exist.  But it doesn't.", Files.exists(expectedFile));
+        String content = new String(Files.readAllBytes(expectedFile));
+
+        System.out.println("expectedContent: " + expectedContent);
+        System.out.println("content: " + content);
+        assertEquals("File "+expectedFile + " should have contents: \n"+ WHOLE_USER_CONTENTS +
+                " but it has contents: \n" + content, expectedContent, content);
     }
 
 }

@@ -48,15 +48,22 @@ public class Main {
         Option sourceOpt = new Option("s", "source", true, "Source of .PREFIX and .SUFFIX and .PER_FIELD files");
         Option destOpt = new Option("d", "dest", true, "destination of generated files");
         Option schemaOpt = new Option("c", "schema", true, "database schema to interrogate");
+        Option tablesOpt = new Option("t", "tables", true, "comma separated tables to process");
         options.addOption(sourceOpt);
         options.addOption(destOpt);
         options.addOption(schemaOpt);
+        options.addOption(tablesOpt);
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
         String source = cmd.getOptionValue("source");
         String dest = cmd.getOptionValue("dest");
         String schema = cmd.getOptionValue("schema");
+        String tableNamesRequestedOption = cmd.getOptionValue("tables");
+        String[] tableNamesRequested = null;
+        if (tableNamesRequestedOption != null) {
+            tableNamesRequested = tableNamesRequestedOption.split(",");
+        }
 
         System.out.println("source: " + source);
         System.out.println("dest: " + dest);
@@ -66,10 +73,21 @@ public class Main {
         Connection conn = DriverManager.getConnection(
                 "jdbc:mysql://localhost:3306/" + schema, "root", "root");
         Collection<Table> tables = new TablesFactory(conn).getTables();
+        Collection<Table> tablesRequested = tables;
+        if (tableNamesRequested != null) {
+            tablesRequested = new ArrayList<>();
+            for(String tableName: tableNamesRequested) {
+                for (Table table: tables) {
+                    if (tableName.equals(table.getDbName())) {
+                        tablesRequested.add(table);
+                    }
+                }
+            }
+        }
         Path sourcePath = Paths.get(source);
         Path destPath = Paths.get(dest);
         Directory sourceDir = new Directory(sourcePath);
-        sourceDir.resolveTo(destPath, tables);
+        sourceDir.resolveTo(destPath, tablesRequested);
 
     }
 
