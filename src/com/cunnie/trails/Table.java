@@ -8,6 +8,7 @@ import java.util.Collection;
  */
 public class Table {
     private String dbName;
+    private String englishName;
     private String className;
     private String camelClassName;
     private Collection<Field> fields;
@@ -25,6 +26,7 @@ public class Table {
             propercaseNames.add(String.valueOf(namechars));
         }
         this.className = String.join("", propercaseNames);
+        this.englishName = String.join(" ", propercaseNames);
         propercaseNames.set(0, names[0]);
         this.camelClassName = String.join("", propercaseNames);
     }
@@ -39,6 +41,10 @@ public class Table {
 
     public String getCamelClassName() {
         return camelClassName;
+    }
+
+    public String getEnglishName() {
+        return englishName;
     }
 
     public Collection<Field> getFields()

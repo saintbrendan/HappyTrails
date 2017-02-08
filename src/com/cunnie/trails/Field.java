@@ -1,39 +1,49 @@
 package com.cunnie.trails;
 
+import java.math.BigDecimal;
 import java.security.InvalidParameterException;
 import java.util.*;
 
 public class Field {
-
+    private static final List<String> KEY_FIELDS = Arrays.asList("id", "version");
     private static final List<String> NON_EDITABLE_FIELDS = Arrays.asList("id", "version",
             "create_time", "create_user",
             "update_time", "update_user");
-    private static String USER_NUMERIC_FORM =
+
+    private static final String KEY_FORM = "            <input type=\"hidden\" th:field=\"*{%s}\"/>\n";
+    private static final String USER_NUMERIC_FORM =
             "            <div class=\"form-group\">\n"+
             "                <label class=\"col-sm-2 control-label\">%s:</label>\n"+
             "                <div class=\"col-sm-10\">\n"+
             "                    <input type=\"text\" class=\"form-control\" th:onkeypress=\"'return event.charCode &gt;= 48 &amp;&amp; event.charCode &lt;= 57'\"  th:field=\"*{%s}\"/>\n"+
             "                </div>\n"+
             "            </div>\n";
-    private static String USER_TEXT_FORM =
+    private static final String USER_TEXT_FORM =
             "            <div class=\"form-group\">\n"+
             "                <label class=\"col-sm-2 control-label\">%s:</label>\n"+
             "                <div class=\"col-sm-10\">\n"+
             "                    <input type=\"text\" class=\"form-control\" th:field=\"*{%s}\"/>\n"+
             "                </div>\n"+
             "            </div>\n";
-    private static String USER_DATE_FORM =
+    private static final String USER_DATE_FORM =
             "            <div class=\"form-group\">\n" +
             "                <label class=\"col-sm-2 control-label\">%s:</label>\n" +
             "                <div class=\"col-sm-10\">\n" +
             "                    <input type=\"date\" class=\"form-control\" th:field=\"*{%s}\"/>\n" +
             "                </div>\n" +
             "            </div>\n";
-    private static String USER_BOOLEAN_FORM =
+    private static final String USER_BOOLEAN_FORM =
             "            <div class=\"form-group\">\n" +
             "                <label class=\"col-sm-2 control-label\">%s:</label>\n" +
             "                <div class=\"col-sm-10\">\n" +
             "                    <input  type='checkbox'  th:field=\"*{%s}\" />\n" +
+            "                </div>\n" +
+            "            </div>\n";
+    public static final String USER_TEXT_SHOW =
+            "            <div class=\"form-group\">\n" +
+            "                <label class=\"col-sm-2 control-label\">%s:</label>\n" +
+            "                <div class=\"col-sm-10\">\n" +
+            "                    <p class=\"form-control-static\" th:text=\"${%s.%s}\">%s</p>\n" +
             "                </div>\n" +
             "            </div>\n";
 
@@ -48,15 +58,17 @@ public class Field {
     private Integer characterMaximumLength = null;
     private Integer numericPrecision = null;
     private Integer numericScale = null;
-    private String predomain = ""; // Used in the domains/class.java files for id and version fields.
+    private boolean isKey;
 
+    private String predomain = ""; // Used in the domains/class.java files for id and version fields.
     // datatype lookup
     private static final Map<String, String> javaTypes;
+
     static {
         Map<String, String> map = new HashMap<>();
-        map.put("int", "int");
+        map.put("int", "java.math.BigDecimal");
         map.put("varchar", "String");
-        map.put("bit", "boolean");
+        map.put("bit", "Boolean");
         map.put("binary", "byte[]");
         map.put("blob", "byte[]");
         map.put("longblob", "byte[]");
@@ -88,6 +100,7 @@ public class Field {
     }
 
     private void initializeField() {
+        isKey = KEY_FIELDS.contains(this.getDbName());
         // Replace _ and capitalize first letter of each word to Englishize
         // e.g.  first_name  -->  First Name
         String[] names = dbName.split("_");
@@ -106,6 +119,13 @@ public class Field {
         if (javaType == null) {
             /// TODO: log but don't throw exception here
             throw new InvalidParameterException(dbName + "'s dbType " + dbType + " does not have a matching java type!");
+        }
+        if (numericScale != null) {
+            if (numericScale == 0) {
+                javaType = "Integer";
+            } else {
+                javaType = "java.math.BigDecimal";
+            }
         }
 
         if ("id".equals(dbName)) {
@@ -144,22 +164,46 @@ public class Field {
         return predomain;
     }
 
-    /// TODO:  delete all this
+    /// TODO:  Think about using %%% tags to swap out
     public String toFormHtml() {
+        if (this.isKey()) {
+            return String.format(KEY_FORM, getJavaName());
+        }
         if (NON_EDITABLE_FIELDS.contains(getDbName())){
             return "            <!-- " + getDbName() + " is not directly editable by the UI -->\n";
         }
         // TODO: think about refactoring this to separate classes.
         switch (dbType) {
             case "date":
-                return String.format(USER_DATE_FORM, getEnglishName(), getDbName());
+                return String.format(USER_DATE_FORM, getEnglishName(), getJavaName());
             case "bit":
-                return String.format(USER_BOOLEAN_FORM, getEnglishName(), getDbName());
+                return String.format(USER_BOOLEAN_FORM, getEnglishName(), getJavaName());
             case "numeric":
             case "decimal":
-                return String.format(USER_NUMERIC_FORM, getEnglishName(), getDbName());
+                return String.format(USER_NUMERIC_FORM, getEnglishName(), getJavaName());
             default:
-                return String.format(USER_TEXT_FORM, getEnglishName(), getDbName());
+                return String.format(USER_TEXT_FORM, getEnglishName(), getJavaName());
+        }
+    }
+
+    public String toShowHtml() {
+        if (NON_EDITABLE_FIELDS.contains(getDbName())){
+            return "            <!-- " + getDbName() + " is not visible on the Show page -->\n";
+        }
+        // TODO: think about refactoring this to separate classes.
+        switch (dbType) {
+            case "date":
+                /// TODO: create a USER_DATE_SHOW
+                return String.format(USER_TEXT_SHOW, getEnglishName(), "%%%TABLE_CAMEL_CASE%%%", getJavaName(), getEnglishName());
+            case "bit":
+                /// TODO: create a USER_BOOLEAN_SHOW
+                return String.format(USER_TEXT_SHOW, getEnglishName(), "%%%TABLE_CAMEL_CASE%%%", getJavaName(), getEnglishName());
+            case "numeric":
+            case "decimal":
+                /// TODO: create a USER_NUMERIC_SHOW
+                return String.format(USER_TEXT_SHOW, getEnglishName(), "%%%TABLE_CAMEL_CASE%%%", getJavaName(), getEnglishName());
+            default:
+                return String.format(USER_TEXT_SHOW, getEnglishName(), "%%%TABLE_CAMEL_CASE%%%", getJavaName(), getEnglishName());
         }
     }
 
@@ -172,4 +216,7 @@ public class Field {
                 .replace("%%%FIELD_ENGLISH_NAME%%%", this.getEnglishName());
     }
 
+    public boolean isKey() {
+        return isKey;
+    }
 }

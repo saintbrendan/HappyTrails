@@ -40,7 +40,7 @@ public class FieldTest {
     @Test
     public void testGetDbTypeInt() throws Exception {
         Field field = new Field("email", "int");
-        assertEquals("int", field.getJavaType());
+        assertEquals("Integer", field.getJavaType());
     }
 
     @Test

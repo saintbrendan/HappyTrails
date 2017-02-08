@@ -17,7 +17,6 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
     private Path sourcePath;
     private Path destinationPath;
     private Collection<Table> tables;
-    private String javaPackage;
     HashMap<Path, HashMap<String, String[]>> filesFromPath = new HashMap<>();
 
     public RecursiveTemplateResolver(Path sourcePath, Path destinationPath, Collection<Table> tables) {
@@ -45,8 +44,6 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
             Files.createDirectory(newDir);
         }
         filesFromPath.put(relativePath, new HashMap<>());
-
-        javaPackage = getJavaPackage(sourcePath, PROJECT_JAVA_DIR, dir);
 
         return supersResult;
     }
@@ -78,6 +75,7 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
             String[] contents = entry.getValue();
             String content = String.join("", contents);
             Path newFile = newDir.resolve(destinationFieldFilename);
+            System.out.println("About to write out to newFile: "+newFile);
             Files.write(newFile, content.getBytes());
         }
 
@@ -96,41 +94,52 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
         FileVisitResult supersResult = super.visitFile(file, attrs);
         String filename = file.getFileName().toString();
+        if ("NetarksWebApplication.java".equals(filename)) {
+            int x = 5;
+        }
         byte[] contentsbytes = Files.readAllBytes(file);
         String contents = new String(contentsbytes);
 
         Path dir = file.getParent();
         Path relativePath = sourcePath.relativize(dir);
+        String javaPackage = getJavaPackage(sourcePath, PROJECT_JAVA_DIR, dir);
+        String javaPackageParent = javaPackage.substring(0, javaPackage.lastIndexOf('.'));
         System.out.println("file: " + file);
         System.out.println("dir: " + dir);
         System.out.println("relativePath: " + relativePath);
+        System.out.println("javaPackage: " + javaPackage);
+        System.out.println("javaPackageParent: " + javaPackageParent);
 
         HashMap<String, String[]> fileContentsByName = filesFromPath.get(relativePath);
         String destinationTableFilename = filename;
         Path parent = file.getParent();
         Path relativeParent = sourcePath.relativize(parent);
         Path newDir = destinationPath.resolve(relativeParent);
-        contents = contents.replace("%%%PACKAGE%%%", this.javaPackage);
+        contents = contents.replace("%%%PACKAGE%%%", javaPackage);
+        contents = contents.replace("%%%PACKAGE_PARENT%%%", javaPackageParent);
         if (filename.contains("TABLE")) {
             for (Table table: tables) {
                 String tableTemplatizedContents = contents
                         .replace("%%%TABLE_NAME%%%", table.getDbName())
                         .replace("%%%TABLE_CLASS%%%", table.getClassName())
-                        .replace("%%%TABLE_CAMEL_CASE%%%", table.getCamelClassName());
+                        .replace("%%%TABLE_CAMEL_CASE%%%", table.getCamelClassName())
+                        .replace("%%%TABLE_ENGLISH_NAME%%%", table.getEnglishName());
                 destinationTableFilename = filename
                         .replace("TABLECLASS", table.getClassName())
                         .replace("TABLENAME", table.getDbName());
                 System.out.println("destinationTableFilename: " + destinationTableFilename);
-                // check for PREFIX, SUFFIX, PER_FIELD
-                if (filename.contains(".PREFIX") || filename.contains(".SUFFIX") || filename.contains(".PER_FIELD")) {
+                // check for PREFIX, PER_FIELD, MIDDLE, SUFFIX
+                if (filename.contains(".PREFIX") || filename.contains(".PER_FIELD") || filename.contains(".MIDDLE") || filename.contains(".SUFFIX")) {
                     String destinationFieldFilename = destinationTableFilename
                             .replace(".PREFIX", "")
-                            .replace(".SUFFIX", "")
                             .replace(".PER_FIELD1", "")
-                            .replace(".PER_FIELD2", "");
+                            .replace(".MIDDLE", "")
+                            .replace(".PER_FIELD2", "")
+                            .replace(".SUFFIX", "")
+                            ;
                     String[] fileParts = fileContentsByName.get(destinationFieldFilename);
                     if (fileParts == null) {
-                        fileParts = new String[4];
+                        fileParts = new String[5];
                         Arrays.fill(fileParts, "");
                     }
                     if (filename.contains(".PER_FIELD")) {
@@ -142,17 +151,22 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
                                     .replace("%%%FIELD_ENGLISH_NAME%%%", field.getEnglishName())
                                     .replace("%%%FIELD_PRE_DOMAIN%%%", field.getPredomain())
                                     .replace("%%%FIELD_JAVA_TYPE%%%", field.getJavaType())
+                                    .replace("%%%FIELD_FORM_HTML%%%", field.toFormHtml())
+                                    .replace("%%%FIELD_SHOW_HTML%%%", field.toShowHtml())
+                                    .replace("%%%TABLE_CAMEL_CASE%%%", table.getCamelClassName())
                                     ;
                             if (filename.contains(".PER_FIELD1")) {
                                 fileParts[1] += fieldTemplatizedContents;
                             } else { //.PER_FIELD2
-                                fileParts[2] += fieldTemplatizedContents;
+                                fileParts[3] += fieldTemplatizedContents;
                             }
                         }
                     } else if (filename.contains(".PREFIX")) {
                         fileParts[0] = tableTemplatizedContents;
+                    } else if (filename.contains(".MIDDLE")) {
+                        fileParts[2] = tableTemplatizedContents;
                     } else { //.SUFFIX
-                        fileParts[3] = tableTemplatizedContents;
+                        fileParts[4] = tableTemplatizedContents;
                     }
                     fileContentsByName.put(destinationFieldFilename, fileParts);
                 } else {
@@ -162,7 +176,7 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
             }
         } else {
             Path newFile = newDir.resolve(destinationTableFilename);
-            Files.write(newFile, contentsbytes);
+            Files.write(newFile, contents.getBytes());
         }
 
         filesFromPath.put(relativePath, fileContentsByName);

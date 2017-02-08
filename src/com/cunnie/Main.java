@@ -91,6 +91,7 @@ public class Main {
 
     }
 
+    //// Erase all of this.
     public static void makeFields() throws ClassNotFoundException, SQLException {
         Class.forName("com.mysql.jdbc.Driver");
         Connection conn = DriverManager.getConnection(
@@ -122,4 +123,5 @@ public class Main {
         }
         return sb.toString();
     }
+    //// Erase all of above
 }
