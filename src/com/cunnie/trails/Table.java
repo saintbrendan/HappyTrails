@@ -46,6 +46,9 @@ public class Table {
     public String getEnglishName() {
         return englishName;
     }
+    public CharSequence getEnglishNamePlural() {
+        return englishName + 's';  /// TODO:  Use English Inflector https://github.com/atteo/evo-inflector/blob/master/src/main/java/org/atteo/evo/inflector/English.java
+    }
 
     public Collection<Field> getFields()
     {
@@ -58,4 +61,5 @@ public class Table {
                 .replace("%%%TABLE_CLASS%%%", this.getClassName())
                 .replace("%%%TABLE_CAMEL_CASE%%%", this.getCamelClassName());
     }
+
 }

@@ -123,7 +123,8 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
                         .replace("%%%TABLE_NAME%%%", table.getDbName())
                         .replace("%%%TABLE_CLASS%%%", table.getClassName())
                         .replace("%%%TABLE_CAMEL_CASE%%%", table.getCamelClassName())
-                        .replace("%%%TABLE_ENGLISH_NAME%%%", table.getEnglishName());
+                        .replace("%%%TABLE_ENGLISH_NAME%%%", table.getEnglishName())
+                        .replace("%%%TABLE_ENGLISH_NAME_PLURAL%%%", table.getEnglishNamePlural());
                 destinationTableFilename = filename
                         .replace("TABLECLASS", table.getClassName())
                         .replace("TABLENAME", table.getDbName());

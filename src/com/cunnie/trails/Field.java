@@ -66,16 +66,33 @@ public class Field {
 
     static {
         Map<String, String> map = new HashMap<>();
-        map.put("int", "java.math.BigDecimal");
-        map.put("varchar", "String");
-        map.put("bit", "Boolean");
-        map.put("binary", "byte[]");
-        map.put("blob", "byte[]");
-        map.put("longblob", "byte[]");
-        map.put("date", "java.sql.Date");
+        map.put("integer", "Integer");
+        map.put("int", "Integer");
+        map.put("smallint", "Integer");
+        map.put("tinyint", "Integer");
+        map.put("mediumint", "Long");
+        map.put("bigint", "java.math.BigInteger");
         map.put("decimal", "java.math.BigDecimal");
         map.put("numeric", "java.math.BigDecimal");
+        map.put("float", "Float");
+        map.put("double", "Double");
+        map.put("varchar", "String");
+        map.put("text", "String");
+        map.put("longtext", "String");
+        map.put("bit", "Boolean");
+        map.put("binary", "byte[]");
+        map.put("varbinary", "byte[]");
+        map.put("blob", "byte[]");
+        map.put("tinyblob", "byte[]");
+        map.put("mediumblob", "byte[]");
+        map.put("longblob", "byte[]");
+        map.put("time", "java.sql.Time");
+        map.put("date", "java.sql.Date");
+        map.put("datetime", "java.sql.Timestamp");
         map.put("timestamp", "java.sql.Timestamp");
+        ///  TODO  if mysql's yearIsDateType is set to false, map.put("year", "java.sql.Short");
+        map.put("year", "java.sql.Date");  // where Month/Day is Jan 1
+        map.put("char", "String");  /// TODO: if character set of column is binary, returns byte[]
         javaTypes = Collections.unmodifiableMap(map);
     }
 
@@ -119,13 +136,6 @@ public class Field {
         if (javaType == null) {
             /// TODO: log but don't throw exception here
             throw new InvalidParameterException(dbName + "'s dbType " + dbType + " does not have a matching java type!");
-        }
-        if (numericScale != null) {
-            if (numericScale == 0) {
-                javaType = "Integer";
-            } else {
-                javaType = "java.math.BigDecimal";
-            }
         }
 
         if ("id".equals(dbName)) {
