@@ -110,8 +110,8 @@ public class Field {
         this.dbType = dbType;
         this.javaName = dbName;
         this.characterMaximumLength = characterMaximumLength;
-        this.numericPrecision = numericPrecision;
-        this.numericScale = numericScale;
+        this.numericPrecision = numericPrecision;   // total number of digits                 precision >= scale
+        this.numericScale = numericScale;           // number of digits to right of decimal.  scale <= precision
 
         initializeField();
     }
@@ -135,7 +135,7 @@ public class Field {
         javaType = javaTypes.get(dbType.toLowerCase());
         if (javaType == null) {
             /// TODO: log but don't throw exception here
-            throw new InvalidParameterException(dbName + "'s dbType " + dbType + " does not have a matching java type!");
+            throw new InvalidParameterException(dbName + "'s dbType '" + dbType + "' does not have a matching java type!");
         }
 
         if ("id".equals(dbName)) {

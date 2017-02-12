@@ -3,7 +3,11 @@ package com.cunnie.trails;
 import com.cunnie.trails.Field;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import java.security.InvalidParameterException;
 
 import static org.junit.Assert.*;
 
@@ -70,7 +74,7 @@ public class FieldTest {
     @Test
     public void testDbTypeBit() throws Exception {
         Field field = new Field("optional_coverage", "bit");
-        assertEquals("boolean", field.getJavaType());
+        assertEquals("Boolean", field.getJavaType());
     }
 
     @Test
@@ -95,5 +99,15 @@ public class FieldTest {
                 "%%%FIELD_ENGLISH_NAME%%%");
         assertEquals("first_name varchar firstName String First Name", resolvedText);
     }
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
+
+    @Test
+    public void testIfDbtypeIsGarbageThenExceptionThrown() {
+        expectedException.expect(InvalidParameterException.class);
+        Field field = new Field("field db name", "NotPossiblyAValidDbType", 11, 10, 2);
+    }
+
 
 }
