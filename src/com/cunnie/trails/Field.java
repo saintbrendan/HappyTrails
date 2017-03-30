@@ -110,8 +110,8 @@ public class Field {
         this.dbType = dbType;
         this.javaName = dbName;
         this.characterMaximumLength = characterMaximumLength;
-        this.numericPrecision = numericPrecision;   // total number of digits                 precision >= scale
-        this.numericScale = numericScale;           // number of digits to right of decimal.  scale <= precision
+        this.numericPrecision = numericPrecision;
+        this.numericScale = numericScale;
 
         initializeField();
     }
@@ -121,26 +121,31 @@ public class Field {
         // Replace _ and capitalize first letter of each word to Englishize
         // e.g.  first_name  -->  First Name
         String[] names = dbName.split("_");
+        if (this.getDbName().equals(this.getDbName().toUpperCase())) {
+            System.out.println(this.getDbName() + " is uppercase");
+        }
         ArrayList<String> propercaseNames = new ArrayList<>();
         for (String name: names) {
-            char[] namechars = name.toCharArray();
+            char[] namechars = name.toLowerCase().toCharArray();
             namechars[0] = Character.toUpperCase(namechars[0]);
             propercaseNames.add(String.valueOf(namechars));
         }
         englishName = String.join(" ", propercaseNames);
         pascalCase = String.join("", propercaseNames);
 
-        propercaseNames.set(0, names[0]);
+        propercaseNames.set(0, names[0].toLowerCase());  // to make camel case for javaName
         javaName = String.join("", propercaseNames);
         javaType = javaTypes.get(dbType.toLowerCase());
         if (javaType == null) {
             /// TODO: log but don't throw exception here
-            throw new InvalidParameterException(dbName + "'s dbType '" + dbType + "' does not have a matching java type!");
+            throw new InvalidParameterException(dbName + "'s dbType " + dbType + " does not have a matching java type!");
         }
 
         if ("id".equals(dbName)) {
             predomain = "@Id\n" +
                     "    @GeneratedValue(strategy = GenerationType.AUTO)";
+            /// Figure if we need to make all ID's BigIntegers instead.
+            javaType = "Integer";
         } else if ("version".equals(dbName)) {
             predomain = "@Version";
         }

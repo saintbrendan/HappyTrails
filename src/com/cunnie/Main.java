@@ -8,13 +8,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-
 import com.cunnie.trails.Directory;
 import com.cunnie.trails.Field;
 import com.cunnie.trails.Table;
 import com.cunnie.trails.TablesFactory;
-import javafx.scene.control.Tab;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.CommandLine;
+
+
 
 
 public class Main {
@@ -28,20 +33,20 @@ public class Main {
 
     private static String USERSHOW =
             "            <div class=\"form-group\">\n" +
-            "                <label class=\"col-sm-2 control-label\">%%%ENGLISHNAME%%%:</label>\n" +
-            "                <div class=\"col-sm-10\">\n" +
-            "                    <p class=\"form-control-static\" th:text=\"${%%%TABLE%%%.%%%DBNAME%%%}\">url....</p>\n" +
-            "                </div>\n" +
-            "            </div>\n";
+                    "                <label class=\"col-sm-2 control-label\">%%%ENGLISHNAME%%%:</label>\n" +
+                    "                <div class=\"col-sm-10\">\n" +
+                    "                    <p class=\"form-control-static\" th:text=\"${%%%TABLE%%%.%%%DBNAME%%%}\">url....</p>\n" +
+                    "                </div>\n" +
+                    "            </div>\n";
     private static String USERS_HEADER = "                <th>%%%ENGLISHNAME%%%</th>\n";
     private static String USERS_DATA = "                <td th:text=\"${user.id}\"><a href=\"/user/${user.%%%DBNAME%%%}\">Id</a></td>\n";
     private static String USER_TEXT_FORM =
             "            <div class=\"form-group\">\n"+
-            "                <label class=\"col-sm-2 control-label\">%%%ENGLISHNAME%%%:</label>\n"+
-            "                <div class=\"col-sm-10\">\n"+
-            "                    <input type=\"text\" class=\"form-control\" th:field=\"*{%%%DBNAME%%%}\"/>\n"+
-            "                </div>\n"+
-            "            </div>\n";
+                    "                <label class=\"col-sm-2 control-label\">%%%ENGLISHNAME%%%:</label>\n"+
+                    "                <div class=\"col-sm-10\">\n"+
+                    "                    <input type=\"text\" class=\"form-control\" th:field=\"*{%%%DBNAME%%%}\"/>\n"+
+                    "                </div>\n"+
+                    "            </div>\n";
     public static void main(String[] args) throws SQLException, ClassNotFoundException, ParseException, IOException {
         // get options
         Options options = new Options();

@@ -176,7 +176,22 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
                 }
             }
         } else {
+            /// Find a cleaner way to do this
             Path newFile = newDir.resolve(destinationTableFilename);
+            if (filename.contains("header.html")) {
+                String template = "                        <li><a href=\"#\" th:href=\"@{/products}\">Products</a></li>";
+                contents = contents.replace(template, "xxx");
+                for (Table table: tables) {
+                    String replacement = "                        <li><a href=\"#\" th:href=\"@{/"
+                            + table.getDbName() + "s}\">"
+                            + table.getEnglishNamePlural()
+                            + "</a></li>\nxxx";
+                            ;
+                    contents = contents.replace("xxx",
+                            replacement);
+                }
+                contents = contents.replace("xxx","");
+            }
             Files.write(newFile, contents.getBytes());
         }
 
