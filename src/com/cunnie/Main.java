@@ -3,13 +3,14 @@ package com.cunnie;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.*;
+import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+
 
 import com.cunnie.trails.Directory;
-import com.cunnie.trails.Field;
 import com.cunnie.trails.Table;
 import com.cunnie.trails.TablesFactory;
 import org.apache.commons.cli.CommandLineParser;
@@ -20,16 +21,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.CommandLine;
 
 
-
-
 public class Main {
-    private static String sqlSchema = "select column_name, data_type, character_maximum_length length, " +
-            "    numeric_precision 'precision', " +
-            "    numeric_scale scale, " +
-            "    column_type  " +
-            "from information_schema.columns " +
-            "where table_schema = 'netarks' " +
-            "    and table_name = ?;";
 
     private static String USERSHOW =
             "            <div class=\"form-group\">\n" +
@@ -93,40 +85,5 @@ public class Main {
         Path destPath = Paths.get(dest);
         Directory sourceDir = new Directory(sourcePath);
         sourceDir.resolveTo(destPath, tablesRequested);
-
     }
-
-    //// Erase all of this.
-    public static void makeFields() throws ClassNotFoundException, SQLException {
-        Class.forName("com.mysql.jdbc.Driver");
-        Connection conn = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/information_schema", "root", "root");
-        PreparedStatement prep = conn.prepareStatement(sqlSchema);
-        prep.setString(1, "user");
-        ResultSet rs = prep.executeQuery();
-        ArrayList<Field> fields = new ArrayList<>();
-        while (rs.next()) {
-            if (!"version".equals(rs.getString("column_name"))) {
-                fields.add(new Field(rs.getString("column_name"), rs.getString("data_type")));
-            }
-        }
-        String UserShowHtml = getString(USERSHOW, "user", fields);
-        System.out.println("<!--  usershow.html  -->\n"+UserShowHtml);
-        String UsersHeaderHtml = getString(USERS_HEADER, "user", fields);
-        String UsersDataHtml = getString(USERS_DATA, "user", fields);
-        System.out.println("\n\n\n<!--  users.html  -->\n"+UsersHeaderHtml);
-        System.out.println("\n"+UsersDataHtml);
-
-        // userform.html
-        System.out.println("\n\n\n<!--  userform.html  -->\n"+getString(USER_TEXT_FORM, "user", fields));
-    }
-
-    public static String getString(String base, String tablename, List<Field> fields) {
-        StringBuffer sb = new StringBuffer();
-        for (Field field: fields) {
-            sb.append(field.toFormHtml());
-        }
-        return sb.toString();
-    }
-    //// Erase all of above
 }
