@@ -12,9 +12,11 @@ public class Table {
     private String className;
     private String camelClassName;
     private Collection<Field> fields;
+    private String tableType;       // from DatabaseMetaData's TABLE_TYPE
 
-    public Table(String dbName, Collection<Field> fields) {
+    public Table(String dbName, String tableType, Collection<Field> fields) {
         this.dbName = dbName;
+        this.tableType = tableType;             // tableType is immutable
         this.fields = new ArrayList<>(fields);  // Field is immutable
 
         /// resolve duplicated code with Field.initializeField() to get Pascal and camelCase names
@@ -53,6 +55,10 @@ public class Table {
     public Collection<Field> getFields()
     {
         return fields;
+    }
+
+    public boolean isEditable() {
+        return tableType.equals("TABLE");
     }
 
     public String resolve(String sourceFileText) {

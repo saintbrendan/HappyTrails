@@ -13,8 +13,9 @@ public class TablesFactory {
         DatabaseMetaData metaData = connection.getMetaData();
         ResultSet rs = metaData.getTables(catalog, catalog, "%", null);
         while (rs.next()) {
+            String tableType = rs.getString("TABLE_TYPE");
             List<Field> fields = new ArrayList<>();
-            String tableName = rs.getString("table_name");
+            String tableName = rs.getString("TABLE_NAME");
             ResultSet rsColumns = metaData.getColumns(catalog, catalog, tableName, null);
             while(rsColumns.next()) {
                 Field field = new Field(rsColumns.getString("COLUMN_NAME"),
@@ -25,7 +26,7 @@ public class TablesFactory {
                         );
                 fields.add(field);
             }
-            tables.add(new Table(tableName, fields));
+            tables.add(new Table(tableName, tableType, fields));
         }
     }
 

@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.regex.*;
 
 /**
  * Created by saint on 11/27/2016.
@@ -119,7 +120,16 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
         contents = contents.replace("%%%PACKAGE_PARENT%%%", javaPackageParent);
         if (filename.contains("TABLE")) {
             for (Table table: tables) {
-                String tableTemplatizedContents = contents
+                String tableTemplatizedContents;
+                if (table.isEditable()) {
+                    tableTemplatizedContents = contents.replace("%%%%IF_EDITABLE%%%%", "")
+                            .replace("%%%%END_IF_EDITABLE%%%%", "");
+                } else {
+                    String regex = "%%%%IF_EDITABLE%%%%.*?%%%%END_IF_EDITABLE%%%%";
+                    // remove all text between IF_EDITABLE and END_IF_EDITABLE tags
+                    tableTemplatizedContents = Pattern.compile(regex, Pattern.DOTALL).matcher(contents).replaceAll("");
+                }
+                tableTemplatizedContents = tableTemplatizedContents
                         .replace("%%%TABLE_NAME%%%", table.getDbName())
                         .replace("%%%TABLE_CLASS%%%", table.getClassName())
                         .replace("%%%TABLE_CAMEL_CASE%%%", table.getCamelClassName())
