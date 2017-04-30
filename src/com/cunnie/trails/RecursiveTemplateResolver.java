@@ -126,7 +126,7 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
                     tableTemplatizedContents = contents.replaceAll(NL + "? *%%%%IF_EDITABLE%%%%", "")
                             .replaceAll(NL + "? *%%%%END_IF_EDITABLE%%%%", "");
                 } else {
-                    String regex = "\n? *%%%%IF_EDITABLE%%%%.*?%%%%END_IF_EDITABLE%%%%";
+                    String regex = NL + "? *%%%%IF_EDITABLE%%%%.*?%%%%END_IF_EDITABLE%%%%";
                     // remove all text between IF_EDITABLE and END_IF_EDITABLE tags
                     tableTemplatizedContents = Pattern.compile(regex, Pattern.DOTALL).matcher(contents).replaceAll("");
                 }
