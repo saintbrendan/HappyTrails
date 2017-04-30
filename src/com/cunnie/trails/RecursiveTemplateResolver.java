@@ -14,6 +14,7 @@ import java.util.regex.*;
  * Created by saint on 11/27/2016.
  */
 public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
+    private static final String NL = System.getProperty("line.separator");
     private static final String PROJECT_JAVA_DIR = "src/main/java/";  // Assuming Java Spring default directories
     private Path sourcePath;
     private Path destinationPath;
@@ -122,10 +123,10 @@ public class RecursiveTemplateResolver extends SimpleFileVisitor<Path> {
             for (Table table: tables) {
                 String tableTemplatizedContents;
                 if (table.isEditable()) {
-                    tableTemplatizedContents = contents.replace("%%%%IF_EDITABLE%%%%", "")
-                            .replace("%%%%END_IF_EDITABLE%%%%", "");
+                    tableTemplatizedContents = contents.replaceAll(NL + "? *%%%%IF_EDITABLE%%%%", "")
+                            .replaceAll(NL + "? *%%%%END_IF_EDITABLE%%%%", "");
                 } else {
-                    String regex = "%%%%IF_EDITABLE%%%%.*?%%%%END_IF_EDITABLE%%%%";
+                    String regex = "\n? *%%%%IF_EDITABLE%%%%.*?%%%%END_IF_EDITABLE%%%%";
                     // remove all text between IF_EDITABLE and END_IF_EDITABLE tags
                     tableTemplatizedContents = Pattern.compile(regex, Pattern.DOTALL).matcher(contents).replaceAll("");
                 }
